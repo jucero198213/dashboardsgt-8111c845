@@ -3,10 +3,13 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
-import { contasAPagar, formatCurrency, formatDate } from "@/data/mockData";
+import { formatCurrency, formatDate } from "@/data/mockData";
+import { useFinancialData } from "@/contexts/FinancialDataContext";
 
 const ContasAPagar = () => {
   const navigate = useNavigate();
+  const { contasPagar, isProcessed } = useFinancialData();
+  const emAberto = contasPagar.filter((c) => c.status === "Em Aberto" || c.status === "Parcial");
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 lg:px-8 xl:px-16">
@@ -27,34 +30,43 @@ const ContasAPagar = () => {
           </div>
         </div>
 
-        <div className="rounded-lg border border-border/60 bg-card overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border/40 hover:bg-transparent">
-                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Documento</TableHead>
-                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Fornecedor</TableHead>
-                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Vencimento</TableHead>
-                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground text-right">Valor</TableHead>
-                <TableHead className="text-xs uppercase tracking-wider text-muted-foreground text-center">Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {contasAPagar.map((c) => (
-                <TableRow key={c.id} className="border-border/30 hover:bg-secondary/30 transition-colors">
-                  <TableCell className="font-medium">{c.documento}</TableCell>
-                  <TableCell>{c.fornecedor}</TableCell>
-                  <TableCell>{formatDate(c.vencimento)}</TableCell>
-                  <TableCell className="text-right font-medium text-warning">{formatCurrency(c.valor)}</TableCell>
-                  <TableCell className="text-center"><StatusBadge status={c.status} /></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="mt-4 flex justify-end text-xs text-muted-foreground">
-          Exibindo {contasAPagar.length} de {contasAPagar.length} registros
-        </div>
+        {!isProcessed || emAberto.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-lg border border-border/60 bg-card py-20">
+            <p className="text-muted-foreground text-sm">
+              {isProcessed ? "Nenhum documento em aberto encontrado" : "Importe e processe os dados no dashboard para visualizar"}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="rounded-lg border border-border/60 bg-card overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border/40 hover:bg-transparent">
+                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Documento</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Fornecedor</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Vencimento</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground text-right">Valor</TableHead>
+                    <TableHead className="text-xs uppercase tracking-wider text-muted-foreground text-center">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {emAberto.map((c) => (
+                    <TableRow key={c.id} className="border-border/30 hover:bg-secondary/30 transition-colors">
+                      <TableCell className="font-medium">{c.documento}</TableCell>
+                      <TableCell>{c.fornecedor}</TableCell>
+                      <TableCell>{formatDate(c.vencimento)}</TableCell>
+                      <TableCell className="text-right font-medium text-warning">{formatCurrency(c.valor)}</TableCell>
+                      <TableCell className="text-center"><StatusBadge status={c.status} /></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="mt-4 flex justify-end text-xs text-muted-foreground">
+              Exibindo {emAberto.length} documento(s) em aberto
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
